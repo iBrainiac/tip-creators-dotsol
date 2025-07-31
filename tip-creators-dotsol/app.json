@@ -1,22 +1,32 @@
 {
   "expo": {
-    "name": "tip-creators-dotsol",
-    "slug": "tip-creators-dotsol",
+    "name": "SolCreator",
+    "slug": "solcreator",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "templateexpobasic",
+    "scheme": "solcreator",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to scan QR codes for tipping creators",
+        "NSNFCReaderUsageDescription": "This app uses NFC to enable tap-to-tip functionality"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#FF6B35"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.solcreator.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.NFC",
+        "android.permission.INTERNET"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -28,9 +38,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FFFFFF",
+          "backgroundColor": "#FF6B35",
           "dark": {
-            "backgroundColor": "#000000",
+            "backgroundColor": "#1A1A1A",
             "image": "./assets/images/splash-icon.png"
           },
           "image": "./assets/images/splash-icon.png",
@@ -39,7 +49,10 @@
         }
       ],
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      "expo-barcode-scanner",
+      "expo-camera",
+      "expo-nfc"
     ],
     "experiments": {
       "typedRoutes": true

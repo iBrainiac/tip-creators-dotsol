@@ -1,0 +1,2 @@
+instructions and resources 
+https://docs.expo.dev/get-started/start-developing/
