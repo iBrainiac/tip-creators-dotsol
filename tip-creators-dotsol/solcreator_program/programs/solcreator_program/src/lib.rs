@@ -18,7 +18,7 @@ pub mod solcreator_program {
         global_state.total_tips_sent = 0;
         global_state.total_bonk_tipped = 0;
         global_state.total_vibe_points_distributed = 0;
-        global_state.bump = *ctx.bumps.get("global_state").unwrap();
+        global_state.bump = ctx.bumps.global_state;
         Ok(())
     }
 
@@ -31,7 +31,7 @@ pub mod solcreator_program {
         user_state.total_tips_sent = 0;
         user_state.total_upvotes = 0;
         user_state.level = 1;
-        user_state.bump = *ctx.bumps.get("user_state").unwrap();
+        user_state.bump = ctx.bumps.user_state;
         Ok(())
     }
 

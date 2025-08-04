@@ -7,65 +7,31 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
+  TextInput,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol';
 import { UI_CONFIG } from '@/constants/bonk-config';
 import { formatBonkAmount } from '@/utils/bonk-utils';
-
-// Mock data for creators
-const mockCreators = [
-  {
-    id: '1',
-    name: 'CryptoArtist',
-    handle: '@cryptoartist',
-    avatar: 'https://via.placeholder.com/60',
-    bio: 'Digital artist creating unique NFT collections',
-    totalTips: 50000,
-    followers: 1200,
-    isOnline: true,
-  },
-  {
-    id: '2',
-    name: 'SolanaDev',
-    handle: '@solanadev',
-    avatar: 'https://via.placeholder.com/60',
-    bio: 'Building the future of DeFi on Solana',
-    totalTips: 75000,
-    followers: 2500,
-    isOnline: false,
-  },
-  {
-    id: '3',
-    name: 'BONKMaster',
-    handle: '@bonkmaster',
-    avatar: 'https://via.placeholder.com/60',
-    bio: 'BONK enthusiast and community builder',
-    totalTips: 100000,
-    followers: 5000,
-    isOnline: true,
-  },
-  {
-    id: '4',
-    name: 'Web3Creator',
-    handle: '@web3creator',
-    avatar: 'https://via.placeholder.com/60',
-    bio: 'Creating content about Web3 and blockchain',
-    totalTips: 30000,
-    followers: 800,
-    isOnline: true,
-  },
-];
+import { WalletStatus } from '@/components/wallet-status';
+import { WalletBalance } from '@/components/wallet-balance';
+import { useCreators } from '@/hooks/use-creators';
+import { type Creator } from '@/services/api';
 
 interface CreatorCardProps {
-  creator: typeof mockCreators[0];
+  creator: Creator;
   onTip: (creatorId: string) => void;
 }
 
 const CreatorCard: React.FC<CreatorCardProps> = ({ creator, onTip }) => {
   return (
-    <View style={styles.creatorCard}>
+    <TouchableOpacity 
+      style={styles.creatorCard}
+      onPress={() => onTip(creator.id)}
+      activeOpacity={0.8}
+    >
       <View style={styles.creatorHeader}>
         <View style={styles.avatarContainer}>
           <Image source={{ uri: creator.avatar }} style={styles.avatar} />
@@ -78,13 +44,16 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator, onTip }) => {
             {creator.bio}
           </Text>
         </View>
-        <TouchableOpacity
-          style={styles.tipButton}
-          onPress={() => onTip(creator.id)}
-        >
-          <UiIconSymbol name="heart.fill" size={20} color={UI_CONFIG.COLORS.PRIMARY} />
-          <Text style={styles.tipButtonText}>Tip</Text>
-        </TouchableOpacity>
+        <View style={styles.tipButtonContainer}>
+          <TouchableOpacity
+            style={styles.tipButton}
+            onPress={() => onTip(creator.id)}
+            activeOpacity={0.7}
+          >
+            <UiIconSymbol name="heart.fill" size={20} color="white" />
+            <Text style={styles.tipButtonText}>Tip</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       
       <View style={styles.creatorStats}>
@@ -97,15 +66,31 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator, onTip }) => {
           <Text style={styles.statValue}>{creator.followers.toLocaleString()}</Text>
           <Text style={styles.statLabel}>Followers</Text>
         </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{creator.isOnline ? '🟢' : '⚪'}</Text>
+          <Text style={styles.statLabel}>{creator.isOnline ? 'Online' : 'Offline'}</Text>
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
 export default function HomeScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
-  const [creators, setCreators] = useState(mockCreators);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  
+  const { data: creatorsData, isLoading, refetch } = useCreators({ 
+    limit: 20,
+    search: searchQuery || undefined,
+    tag: selectedTag || undefined,
+  });
+  const creators = creatorsData?.creators || [];
+
+  // Available tags for filtering
+  const availableTags = ['All', 'NFT', 'Art', 'Digital', 'DeFi', 'Development', 'Solana', 'BONK', 'Community', 'Memes', 'Web3', 'Education', 'Content'];
 
   const handleTip = (creatorId: string) => {
     router.push({
@@ -114,20 +99,27 @@ export default function HomeScreen() {
     });
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
-    // Simulate API call
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    await refetch();
+    setRefreshing(false);
   };
 
   const handleScanQR = () => {
     router.push('/(tabs)/qr-scanner');
   };
 
-  const handleNFC = () => {
-    router.push('/(tabs)/nfc-tip');
+  const handleTagPress = (tag: string) => {
+    if (tag === 'All') {
+      setSelectedTag(null);
+    } else {
+      setSelectedTag(selectedTag === tag ? null : tag);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSelectedTag(null);
   };
 
   return (
@@ -138,10 +130,54 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.actionButton} onPress={handleScanQR}>
             <UiIconSymbol name="qrcode" size={24} color={UI_CONFIG.COLORS.PRIMARY} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleNFC}>
-            <UiIconSymbol name="wave.3.right" size={24} color={UI_CONFIG.COLORS.PRIMARY} />
-          </TouchableOpacity>
         </View>
+      </View>
+
+      <WalletStatus />
+      <WalletBalance />
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <UiIconSymbol name="magnifyingglass" size={20} color="#666" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search creators..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor="#666"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={clearSearch}>
+              <UiIconSymbol name="xmark.circle.fill" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Tag Filters */}
+      <View style={styles.tagsContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {availableTags.map((tag) => (
+            <TouchableOpacity
+              key={tag}
+              style={[
+                styles.tagButton,
+                selectedTag === tag && styles.tagButtonActive,
+                tag === 'All' && !selectedTag && styles.tagButtonActive,
+              ]}
+              onPress={() => handleTagPress(tag)}
+            >
+              <Text style={[
+                styles.tagText,
+                selectedTag === tag && styles.tagTextActive,
+                tag === 'All' && !selectedTag && styles.tagTextActive,
+              ]}>
+                {tag}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       <View style={styles.statsContainer}>
@@ -155,16 +191,38 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <FlatList
-        data={creators}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <CreatorCard creator={item} onTip={handleTip} />}
-        contentContainerStyle={styles.listContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
-      />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading creators...</Text>
+        </View>
+      ) : creators.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <UiIconSymbol name="person.3" size={48} color="#666" />
+          <Text style={styles.emptyTitle}>No creators found</Text>
+          <Text style={styles.emptyMessage}>
+            {searchQuery || selectedTag 
+              ? 'Try adjusting your search or filter criteria'
+              : 'Check back later for new creators'
+            }
+          </Text>
+          {(searchQuery || selectedTag) && (
+            <TouchableOpacity style={styles.clearButton} onPress={clearSearch}>
+              <Text style={styles.clearButtonText}>Clear Filters</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : (
+        <FlatList
+          data={creators}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <CreatorCard creator={item} onTip={handleTip} />}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -279,10 +337,13 @@ const styles = StyleSheet.create({
     color: UI_CONFIG.COLORS.TEXT,
     lineHeight: 20,
   },
+  tipButtonContainer: {
+    marginTop: UI_CONFIG.SPACING.MD,
+  },
   tipButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF5F2',
+    backgroundColor: UI_CONFIG.COLORS.PRIMARY,
     paddingHorizontal: UI_CONFIG.SPACING.MD,
     paddingVertical: UI_CONFIG.SPACING.SM,
     borderRadius: 20,
@@ -293,7 +354,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontSize: 14,
     fontWeight: '600',
-    color: UI_CONFIG.COLORS.PRIMARY,
+    color: 'white',
   },
   creatorStats: {
     flexDirection: 'row',
@@ -317,5 +378,100 @@ const styles = StyleSheet.create({
     width: 1,
     height: 30,
     backgroundColor: '#E5E5E5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: UI_CONFIG.SPACING.XL,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: UI_CONFIG.COLORS.TEXT,
+    marginTop: UI_CONFIG.SPACING.MD,
+  },
+  searchContainer: {
+    paddingHorizontal: UI_CONFIG.SPACING.LG,
+    paddingVertical: UI_CONFIG.SPACING.MD,
+    backgroundColor: '#F5F5F5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    paddingHorizontal: UI_CONFIG.SPACING.MD,
+    paddingVertical: UI_CONFIG.SPACING.SM,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 0,
+    paddingHorizontal: UI_CONFIG.SPACING.SM,
+  },
+  tagsContainer: {
+    paddingHorizontal: UI_CONFIG.SPACING.LG,
+    paddingVertical: UI_CONFIG.SPACING.SM,
+    backgroundColor: '#F5F5F5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  tagButton: {
+    paddingHorizontal: UI_CONFIG.SPACING.MD,
+    paddingVertical: UI_CONFIG.SPACING.SM,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    marginRight: UI_CONFIG.SPACING.SM,
+    backgroundColor: 'white',
+  },
+  tagButtonActive: {
+    borderColor: UI_CONFIG.COLORS.PRIMARY,
+    borderWidth: 1,
+  },
+  tagText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  tagTextActive: {
+    color: UI_CONFIG.COLORS.PRIMARY,
+    fontWeight: '600',
+  },
+  clearButton: {
+    marginTop: UI_CONFIG.SPACING.MD,
+    paddingVertical: UI_CONFIG.SPACING.SM,
+    paddingHorizontal: UI_CONFIG.SPACING.MD,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    alignSelf: 'center',
+  },
+  clearButtonText: {
+    fontSize: 14,
+    color: UI_CONFIG.COLORS.PRIMARY,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: UI_CONFIG.SPACING.XL,
+    backgroundColor: UI_CONFIG.COLORS.BACKGROUND,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: UI_CONFIG.COLORS.TEXT,
+    marginTop: UI_CONFIG.SPACING.MD,
+  },
+  emptyMessage: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: UI_CONFIG.SPACING.SM,
+    textAlign: 'center',
+    paddingHorizontal: UI_CONFIG.SPACING.MD,
   },
 }); 

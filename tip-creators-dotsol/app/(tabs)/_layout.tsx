@@ -15,6 +15,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="social-feed"
+        options={{
+          title: 'Social Feed',
+          tabBarIcon: ({ color }) => <UiIconSymbol size={28} name="message.circle.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="vibe-score"
         options={{
           title: 'Vibe Score',
@@ -39,6 +46,8 @@ export default function TabLayout() {
       <Tabs.Screen name="qr-scanner" options={{ tabBarItemStyle: { display: 'none' } }} />
       <Tabs.Screen name="tip" options={{ tabBarItemStyle: { display: 'none' } }} />
       <Tabs.Screen name="demo" options={{ tabBarItemStyle: { display: 'none' } }} />
+      <Tabs.Screen name="post-detail" options={{ tabBarItemStyle: { display: 'none' } }} />
+      <Tabs.Screen name="add-creator" options={{ tabBarItemStyle: { display: 'none' } }} />
     </Tabs>
   )
 }

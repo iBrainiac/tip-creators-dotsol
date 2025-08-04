@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { SolcreatorProgram } from "../target/types/solcreator_program";
+// import { SolcreatorProgram } from "../target/types/solcreator_program";
 import {
   Keypair,
   LAMPORTS_PER_SOL,
@@ -20,7 +20,7 @@ describe("solcreator-program", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const program = anchor.workspace.SolcreatorProgram as Program<SolcreatorProgram>;
+  const program = anchor.workspace.SolcreatorProgram as any;
 
   // Test accounts
   const authority = Keypair.generate();
@@ -227,7 +227,7 @@ describe("solcreator-program", () => {
 
     // Should claim 10 BONK (106 points / 10 = 10 BONK)
     const claimedAmount = userTokenAccountAfter.amount - userTokenAccountBefore.amount;
-    assert.equal(claimedAmount, 10);
+    assert.equal(claimedAmount, BigInt(10));
 
     // Points should be reset to 0
     assert.equal(userState.vibePoints.toNumber(), 0);
@@ -252,7 +252,7 @@ describe("solcreator-program", () => {
 
       assert.fail("Should have thrown an error");
     } catch (error) {
-      assert.include(error.message, "No rewards available to claim");
+      assert.include((error as any).message, "No rewards available to claim");
     }
   });
 

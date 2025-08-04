@@ -3,8 +3,8 @@ import { Cluster } from '@/components/cluster/cluster'
 import { ClusterNetwork } from '@/components/cluster/cluster-network'
 
 export class AppConfig {
-  static name = 'tip-creators-dotsol'
-  static uri = 'https://example.com'
+  static name = 'SolCreator'
+  static uri = 'https://solcreator.app'
   static clusters: Cluster[] = [
     {
       id: 'solana:devnet',

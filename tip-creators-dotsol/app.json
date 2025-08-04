@@ -11,8 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "This app uses the camera to scan QR codes for tipping creators",
-        "NSNFCReaderUsageDescription": "This app uses NFC to enable tap-to-tip functionality"
+        "NSCameraUsageDescription": "This app uses the camera to scan QR codes for tipping creators"
       }
     },
     "android": {
@@ -50,9 +49,7 @@
       ],
       "expo-web-browser",
       "expo-font",
-      "expo-barcode-scanner",
-      "expo-camera",
-      "expo-nfc"
+      "expo-camera"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { BONK_TOKEN_CONFIG } from '../constants/bonk-config';
+import { BONK_TOKEN_CONFIG, APP_CONFIG } from '../constants/bonk-config';
 
 /**
  * Convert BONK amount from human-readable format to lamports (smallest unit)
@@ -86,7 +86,7 @@ export function calculateTipPoints(tipAmount: number): number {
  * @returns BONK reward amount
  */
 export function calculateBonkReward(points: number): number {
-  const { MIN_POINTS_FOR_REWARD, BONK_PER_POINTS } = BONK_TOKEN_CONFIG.VIBE_SCORE;
+  const { MIN_POINTS_FOR_REWARD, BONK_PER_POINTS } = APP_CONFIG.VIBE_SCORE;
   
   if (points < MIN_POINTS_FOR_REWARD) {
     return 0;

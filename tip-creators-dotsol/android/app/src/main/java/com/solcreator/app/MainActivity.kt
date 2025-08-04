@@ -1,4 +1,4 @@
-package com.anonymous.tipcreatorsdotsol
+package com.solcreator.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

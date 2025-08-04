@@ -19,11 +19,22 @@ import {
   formatBonkAmount, 
   createSolanaPayUrl,
   calculateTipPoints,
+  bonkToLamports,
 } from '@/utils/bonk-utils';
+import { useAuth } from '@/components/auth/auth-provider';
+import { useWalletUi } from '@/components/solana/use-wallet-ui';
+import { useConnection } from '@/components/solana/solana-provider';
+import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction } from '@solana/spl-token';
+import { Transaction, PublicKey } from '@solana/web3.js';
+import { useRecordTip } from '@/hooks/use-creators';
 
 export default function TipScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { isAuthenticated } = useAuth();
+  const { signAndSendTransaction } = useWalletUi();
+  const connection = useConnection();
+  const recordTipMutation = useRecordTip();
   
   const [amount, setAmount] = useState(params.amount?.toString() || '');
   const [recipientAddress, setRecipientAddress] = useState(params.recipientAddress?.toString() || '');
@@ -49,6 +60,11 @@ export default function TipScreen() {
   };
 
   const handleTip = async () => {
+    if (!isAuthenticated) {
+      Alert.alert('Wallet Not Connected', 'Please connect your wallet to send tips.');
+      return;
+    }
+
     const numAmount = parseFloat(amount);
     
     // Validate amount
@@ -67,13 +83,6 @@ export default function TipScreen() {
     setIsLoading(true);
 
     try {
-      // Create Solana Pay URL
-      const solanaPayUrl = createSolanaPayUrl(
-        recipientAddress,
-        numAmount,
-        reference || undefined
-      );
-
       // Calculate points earned
       const pointsEarned = calculateTipPoints(numAmount);
 
@@ -85,29 +94,82 @@ export default function TipScreen() {
           {
             text: 'Cancel',
             style: 'cancel',
+            onPress: () => setIsLoading(false),
           },
           {
             text: 'Send Tip',
-            onPress: () => {
-              // In a real app, this would trigger the Solana Pay flow
-              Alert.alert(
-                'Tip Sent!',
-                `Successfully sent ${formatBonkAmount(numAmount)} to ${mockCreator.name}.\n\nYou earned ${pointsEarned} vibe points!`,
-                [
-                  {
-                    text: 'OK',
-                    onPress: () => router.back(),
-                  },
-                ]
-              );
+            onPress: async () => {
+              try {
+                await sendTipTransaction(numAmount, recipientAddress);
+                Alert.alert(
+                  'Tip Sent!',
+                  `Successfully sent ${formatBonkAmount(numAmount)} to ${mockCreator.name}.\n\nYou earned ${pointsEarned} vibe points!`,
+                  [
+                    {
+                      text: 'OK',
+                      onPress: () => router.back(),
+                    },
+                  ]
+                );
+              } catch (error) {
+                Alert.alert('Error', 'Failed to send tip. Please try again.');
+              } finally {
+                setIsLoading(false);
+              }
             },
           },
         ]
       );
     } catch (error) {
       Alert.alert('Error', 'Failed to process tip. Please try again.');
-    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const sendTipTransaction = async (amount: number, recipient: string) => {
+    try {
+      const bonkMint = new PublicKey('DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'); // BONK mint
+      const recipientPubkey = new PublicKey(recipient);
+      
+      // Get token accounts
+      const senderTokenAccount = await getAssociatedTokenAddress(bonkMint, new PublicKey(recipient));
+      const recipientTokenAccount = await getAssociatedTokenAddress(bonkMint, recipientPubkey);
+
+      const transaction = new Transaction();
+
+      // Check if recipient token account exists, if not create it
+      try {
+        await connection.getAccountInfo(recipientTokenAccount);
+      } catch {
+        // Create associated token account for recipient
+        transaction.add(
+          createAssociatedTokenAccountInstruction(
+            new PublicKey(recipient), // payer
+            recipientTokenAccount,
+            recipientPubkey,
+            bonkMint
+          )
+        );
+      }
+
+      // Add transfer instruction
+      transaction.add(
+        createTransferInstruction(
+          senderTokenAccount,
+          recipientTokenAccount,
+          new PublicKey(recipient),
+          bonkToLamports(amount)
+        )
+      );
+
+      // Send transaction
+      const signature = await signAndSendTransaction(transaction, 0);
+      console.log('Transaction sent:', signature);
+      
+      return signature;
+    } catch (error) {
+      console.error('Error sending tip:', error);
+      throw error;
     }
   };
 
@@ -119,7 +181,7 @@ export default function TipScreen() {
 
     // Navigate to QR generation screen
     router.push({
-      pathname: '/(tabs)/qr-generator',
+      pathname: '/(tabs)/qr-scanner',
       params: {
         recipientAddress,
         amount: amount || '0',

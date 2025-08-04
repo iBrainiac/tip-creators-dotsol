@@ -9,10 +9,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { BarCodeScanner } from 'expo-barcode-scanner';
+// import { BarCodeScanner } from 'expo-barcode-scanner';
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol';
 import { UI_CONFIG } from '@/constants/bonk-config';
 import { parseSolanaPayUrl } from '@/utils/bonk-utils';
+import { SolanaPayService } from '@/services/solana-pay';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,10 +24,11 @@ export default function QRScannerScreen() {
   const [isFlashOn, setIsFlashOn] = useState(false);
 
   useEffect(() => {
-    const getBarCodeScannerPermissions = async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHasPermission(status === 'granted');
-    };
+      const getBarCodeScannerPermissions = async () => {
+    // const { status } = await BarCodeScanner.requestPermissionsAsync();
+    // setHasPermission(status === 'granted');
+    setHasPermission(false); // Temporarily disabled
+  };
 
     getBarCodeScannerPermissions();
   }, []);
@@ -37,14 +39,14 @@ export default function QRScannerScreen() {
     try {
       // Check if it's a Solana Pay URL
       if (data.startsWith('solana:')) {
-        const parsedData = parseSolanaPayUrl(data);
+        const parsedData = SolanaPayService.parsePaymentUrl(data);
         
-        if (parsedData.recipientAddress && parsedData.amount > 0) {
+        if (parsedData && parsedData.recipient && parsedData.amount > 0) {
           // Navigate to tipping screen with scanned data
           router.push({
             pathname: '/(tabs)/tip',
             params: {
-              recipientAddress: parsedData.recipientAddress,
+              recipientAddress: parsedData.recipient,
               amount: parsedData.amount.toString(),
               reference: parsedData.reference || '',
             },
@@ -123,11 +125,9 @@ export default function QRScannerScreen() {
       </View>
 
       <View style={styles.scannerContainer}>
-        <BarCodeScanner
-          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-          style={styles.scanner}
-          flashMode={isFlashOn ? BarCodeScanner.Constants.FlashMode.torch : BarCodeScanner.Constants.FlashMode.off}
-        />
+        <View style={styles.scanner}>
+          <Text style={styles.scannerText}>QR Scanner Temporarily Disabled</Text>
+        </View>
         
         <View style={styles.overlay}>
           <View style={styles.scanFrame}>
@@ -195,6 +195,14 @@ const styles = StyleSheet.create({
   },
   scanner: {
     ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  scannerText: {
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

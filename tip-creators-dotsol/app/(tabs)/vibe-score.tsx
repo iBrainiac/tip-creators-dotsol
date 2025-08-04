@@ -22,7 +22,7 @@ const mockVibeData = {
   recentActivities: [
     {
       id: '1',
-      type: 'tip',
+      type: 'tip' as const,
       amount: 1000,
       creator: 'CryptoArtist',
       timestamp: '2 hours ago',
@@ -30,14 +30,14 @@ const mockVibeData = {
     },
     {
       id: '2',
-      type: 'upvote',
+      type: 'upvote' as const,
       creator: 'SolanaDev',
       timestamp: '4 hours ago',
       points: 1,
     },
     {
       id: '3',
-      type: 'tip',
+      type: 'tip' as const,
       amount: 500,
       creator: 'BONKMaster',
       timestamp: '1 day ago',
@@ -45,7 +45,7 @@ const mockVibeData = {
     },
     {
       id: '4',
-      type: 'upvote',
+      type: 'upvote' as const,
       creator: 'Web3Creator',
       timestamp: '2 days ago',
       points: 1,
@@ -56,28 +56,28 @@ const mockVibeData = {
       id: '1',
       title: 'First Tip',
       description: 'Sent your first BONK tip',
-      icon: 'heart.fill',
+      icon: 'heart.fill' as const,
       unlocked: true,
     },
     {
       id: '2',
       title: 'Generous Tipper',
       description: 'Tipped over 10K BONK',
-      icon: 'star.fill',
+      icon: 'star.fill' as const,
       unlocked: true,
     },
     {
       id: '3',
       title: 'Community Curator',
       description: 'Upvoted 50 posts',
-      icon: 'hand.thumbsup.fill',
+      icon: 'hand.thumbsup.fill' as const,
       unlocked: false,
     },
     {
       id: '4',
       title: 'BONK Whale',
       description: 'Tipped over 100K BONK',
-      icon: 'crown.fill',
+      icon: 'crown.fill' as const,
       unlocked: false,
     },
   ],
@@ -102,7 +102,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
   const getActivityText = () => {
     switch (activity.type) {
       case 'tip':
-        return `Tipped ${formatBonkAmount(activity.amount)} to ${activity.creator}`;
+        return `Tipped ${formatBonkAmount(activity.amount || 0)} to ${activity.creator}`;
       case 'upvote':
         return `Upvoted ${activity.creator}'s post`;
       default:
@@ -217,7 +217,7 @@ export default function VibeScoreScreen() {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.actionButton}
-          onPress={() => router.push('/(tabs)/leaderboard')}
+          onPress={() => router.push('/(tabs)/home')}
         >
           <UiIconSymbol name="trophy.fill" size={24} color={UI_CONFIG.COLORS.SECONDARY} />
           <Text style={styles.actionText}>View Leaderboard</Text>

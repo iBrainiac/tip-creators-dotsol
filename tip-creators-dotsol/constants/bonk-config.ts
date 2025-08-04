@@ -99,7 +99,6 @@ export const UI_CONFIG = {
 
 // Feature flags
 export const FEATURES = {
-  NFC_TIPPING: true,
   QR_SCANNING: true,
   VIBE_SCORE: true,
   LEADERBOARD: true,

@@ -1,4 +1,4 @@
-package com.anonymous.tipcreatorsdotsol
+package com.solcreator.app
 
 import android.app.Application
 import android.content.res.Configuration
