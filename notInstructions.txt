@@ -1,11 +1,2 @@
-instructions and resources 
-https://docs.expo.dev/get-started/start-developing/
 
 Next Steps Available
-Resolve Smart Contract Build Issue (when network/toolchain is ready)
-Step 4: Frontend-Backend Integration - Connect React Native to smart contracts
-Step 5: NFC Implementation - Implement actual NFC tipping using Seeker's hardware
-Step 6: Testing & Deployment - Unit tests, integration tests, and deployment
-The foundation is solid and we have a fully functional frontend ready to integrate with 
-the smart contracts once the build issue is resolved. Would you like to proceed with any 
-of the next steps, or would you prefer to focus on resolving the smart contract build issue first?
